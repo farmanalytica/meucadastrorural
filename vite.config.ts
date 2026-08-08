@@ -1,9 +1,10 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-// GitHub Pages serves the site under /<repo>/ — the base must match or every
-// asset and public/geo fetch 404s. Overridable for a future custom domain.
+// Served at the root of the custom domain meucadastrorural.com.br.
+// (Under the default <owner>.github.io/<repo>/ URL the base would need to
+// be '/meucadastrorural/' — override with VITE_BASE if the domain is removed.)
 export default defineConfig({
-  base: process.env.VITE_BASE ?? '/meucadastrorural/',
+  base: process.env.VITE_BASE ?? '/',
   plugins: [vue()],
 })

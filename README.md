@@ -3,7 +3,7 @@
 Consulta pública do CAR (Cadastro Ambiental Rural), 100% estática — publicada no
 GitHub Pages, sem backend.
 
-**Site:** https://farmanalytica.github.io/meucadastrorural/
+**Site:** https://meucadastrorural.com.br
 
 ## Funcionalidades
 
@@ -28,7 +28,7 @@ GitHub Pages, sem backend.
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173/meucadastrorural/
+npm run dev        # http://localhost:5173/
 npm run build      # gera dist/
 npm run typecheck
 ```
