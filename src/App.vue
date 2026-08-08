@@ -14,6 +14,7 @@ import { useMapLayers } from './composables/useMapLayers'
 import MapSearch from './components/MapSearch.vue'
 import CarDetailPanel from './components/CarDetailPanel.vue'
 import LayerVisibilityToggle from './components/LayerVisibilityToggle.vue'
+import SiteFooter from './components/SiteFooter.vue'
 
 // areaOverlayLayer reads globalThis.L (ported code) — guarantee it before
 // the controller is created.
@@ -206,10 +207,7 @@ onBeforeUnmount(() => {
       @retry="detailPanel.retryCarDetails"
     />
 
-    <footer class="app__credits">
-      Dados: <a href="https://www.car.gov.br/" target="_blank" rel="noopener noreferrer">SICAR</a> ·
-      <a href="https://www.ibge.gov.br/" target="_blank" rel="noopener noreferrer">IBGE</a>
-    </footer>
+    <SiteFooter />
   </div>
 </template>
 
@@ -298,20 +296,6 @@ onBeforeUnmount(() => {
   color: var(--text-muted);
 }
 
-.app__credits {
-  position: absolute;
-  z-index: 15;
-  bottom: 0.35rem;
-  left: 0.5rem;
-  font-size: 0.68rem;
-  color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
-}
-
-.app__credits a {
-  color: inherit;
-}
-
 @media (max-width: 640px) {
   .app__brand {
     width: calc(100vw - 2rem);
@@ -319,7 +303,19 @@ onBeforeUnmount(() => {
 
   .app__layers {
     top: auto;
-    bottom: 4.5rem;
+    bottom: 5.5rem;
   }
+}
+</style>
+
+<style>
+/* Unscoped: keep Leaflet controls and the CAR panel clear of the footer bar. */
+.app .leaflet-bottom {
+  bottom: 38px;
+}
+
+.app .mapa__panel {
+  bottom: calc(1rem + 38px);
+  max-height: calc(100% - 2rem - 38px);
 }
 </style>
