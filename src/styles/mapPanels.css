@@ -1,0 +1,482 @@
+/* Chrome e conteúdo dos painéis laterais do mapa (imóvel CAR, análise de
+   terreno e pivô). Global (não scoped) porque os componentes *Panel.vue
+   extraídos de MapaView dependem destas classes — o CSS scoped do pai não
+   alcança o interior de componentes filhos. Regras de layout do mapa
+   (stage/toast/locate) permanecem scoped em MapaView.vue. */
+
+.mapa__panel {
+  position: absolute;
+  z-index: 10;
+  right: 1rem;
+  bottom: 1rem;
+  width: 300px;
+  height: fit-content;
+  max-height: calc(100% - 2rem);
+  max-width: calc(100vw - 2rem);
+  overflow-y: auto;
+  background: rgba(251, 252, 251, 0.97);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--sh-lg);
+  padding: 1rem;
+}
+
+/* Below this width the chart and the 300px card cannot remain readable side
+   by side. Keep the card mounted (so its state is preserved), but let NDVI
+   temporarily own the available overlay space; closing NDVI reveals it again. */
+@container map-stage (max-width: 639px) {
+  .mapa__stage--split-panels .mapa__panel {
+    display: none;
+  }
+}
+
+.mapa__legend-close {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.5rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1.05rem;
+  line-height: 1;
+  color: var(--text-soft);
+  padding: 0.15rem 0.3rem;
+  border-radius: 4px;
+}
+
+.mapa__legend-close:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.hint {
+  color: var(--text-soft);
+  margin-top: 0.4rem;
+}
+
+.mapa__panel h3 {
+  margin: 0 0 0.3rem;
+  padding-right: 1.5rem;
+  font-size: 1.02rem;
+  line-height: 1.25;
+  color: var(--primary);
+}
+
+.code {
+  font-size: 0.74rem;
+  color: var(--text-soft);
+  word-break: break-all;
+  margin: 0 0 0.7rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.kv__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.86rem;
+}
+
+.kv__label {
+  color: var(--text-soft);
+}
+
+.kv__value {
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 1rem;
+}
+
+.actions .btn {
+  flex: 1 1 auto;
+  justify-content: center;
+  font-size: 0.84rem;
+  min-height: 36px;
+  padding: 0.48rem 0.7rem;
+  border-radius: 8px;
+}
+
+.actions .mapa__primary-action {
+  flex-basis: 100%;
+  min-height: 42px;
+  padding: 0.62rem 0.9rem;
+  font-weight: 700;
+}
+
+.mapa__label-full,
+.mapa__label-short {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mapa__label-short {
+  display: none;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.terrain-analysis {
+  margin-top: 0.85rem;
+  padding: 0.8rem;
+  background: #f4f7f5;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.terrain-analysis__head,
+.terrain-analysis__status,
+.terrain-analysis__legend > div,
+.terrain-analysis__details dl div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.terrain-analysis__head small,
+.terrain-analysis__head strong { display: block; }
+.terrain-analysis__head small { color: var(--text-soft); font-size: 0.67rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+.terrain-analysis__head strong { margin-top: 0.1rem; font-size: 0.86rem; }
+.terrain-analysis__head-right { display: flex; align-items: center; gap: 0.4rem; }
+/* Flat, bordered status chip (not a soft SaaS pill) — reads as a data-layer
+   state indicator, same idea as a GIS layer-list's status glyph. Border
+   carries the state color so the badge stays legible at low visual weight;
+   background stays near-white across all states instead of a filled pastel. */
+.terrain-analysis__badge {
+  padding: 0.2rem 0.46rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text-soft);
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.terrain-analysis__badge.is-processing { border-color: #d97706; color: #b45309; }
+.terrain-analysis__badge.is-ready { border-color: #166534; color: #166534; }
+.terrain-analysis__badge.is-failed { border-color: #991b1b; color: #991b1b; }
+.terrain-analysis__close { border: none; background: none; cursor: pointer; padding: 0 0.15rem; font-size: 1.05rem; line-height: 1; color: var(--text-soft); border-radius: 4px; }
+.terrain-analysis__close:hover { background: rgba(0, 0, 0, 0.06); color: var(--text); }
+.terrain-analysis__status { justify-content: flex-start; margin-top: 0.75rem; color: var(--text-soft); font-size: 0.78rem; line-height: 1.4; }
+.terrain-analysis__spinner { flex: none; width: 17px; height: 17px; border: 2px solid #cbd5d1; border-top-color: var(--accent); border-radius: 50%; animation: terrain-spin .8s linear infinite; }
+.terrain-analysis__error { margin-top: 0.7rem; padding: 0.65rem; border-radius: 8px; background: #fff1f2; color: #9f1239; font-size: 0.76rem; }
+.terrain-analysis__error p { margin: 0 0 0.35rem; }
+.terrain-analysis__error a { color: inherit; font-weight: 750; }
+.terrain-analysis__layers { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 0.3rem; margin-top: 0.75rem; }
+.terrain-analysis__layers button { min-width: 0; padding: 0.46rem 0.2rem; border: 1px solid var(--border); border-radius: 8px; background: white; color: var(--text); font: inherit; font-size: 0.71rem; font-weight: 750; cursor: pointer; }
+.terrain-analysis__layers button:hover:not(.active) { border-color: var(--accent); background: #eef2f0; }
+.terrain-analysis__layers button.active { border-color: var(--accent); background: var(--accent); color: white; }
+.terrain-analysis__layers--sub { margin-top: 0.4rem; padding-left: 0.5rem; border-left: 2px solid var(--border); gap: 0.24rem; }
+.terrain-analysis__layers--sub button { padding: 0.34rem 0.2rem; font-size: 0.66rem; font-weight: 650; background: transparent; border-color: transparent; color: var(--text-soft); }
+.terrain-analysis__layers--sub button:hover:not(.active) { background: #eef2f0; border-color: transparent; }
+.terrain-analysis__layers--sub button.active { background: transparent; border-color: var(--accent); color: var(--accent); }
+.terrain-analysis__layer-status { margin: 0.4rem 0 0; color: var(--text-soft); font-size: 0.7rem; }
+.terrain-analysis__field { margin-top: 0.5rem; }
+.terrain-analysis .is-error { color: #b91c1c; }
+.terrain-analysis__legend { margin-top: 0.65rem; }
+.terrain-analysis__legend > span { display: block; margin-bottom: 0.28rem; font-size: 0.7rem; font-weight: 750; }
+.terrain-analysis__gradient { display: block; height: 9px; border-radius: 99px; }
+.terrain-analysis__gradient.is-dem { background: linear-gradient(90deg, #0033b3, #00b3cc, #e6e633, #fa7a1f, #9e1414); }
+.terrain-analysis__gradient.is-slope { background: linear-gradient(90deg, #000004, #1b0c41, #4f0c6b, #a52c60, #e16462, #fca636, #fcfdbf); }
+.terrain-analysis__slider { display: grid; grid-template-columns: 1fr auto; gap: 0.3rem 0.5rem; align-items: center; margin: 0.4rem 0; font-size: 0.72rem; font-weight: 650; }
+.terrain-analysis__slider input[type=range] { grid-column: 1 / -1; width: 100%; }
+.terrain-analysis__slider select { border: 1px solid var(--border); border-radius: 8px; padding: 0.25rem 0.4rem; font-weight: 650; }
+.terrain-analysis__legend small { margin-top: 0.2rem; color: var(--text-soft); font-size: 0.65rem; }
+.terrain-analysis__classes { list-style: none; margin: 0.3rem 0 0; padding: 0; display: grid; gap: 0.22rem; }
+.terrain-analysis__classes li { display: grid; grid-template-columns: 14px 1fr auto auto; align-items: center; gap: 0.45rem; font-size: 0.68rem; }
+.terrain-analysis__swatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0, 0, 0, 0.18); }
+.terrain-analysis__class-label { font-weight: 700; }
+.terrain-analysis__class-range { color: var(--text-soft); font-variant-numeric: tabular-nums; }
+.terrain-analysis__class-pct { font-weight: 800; font-variant-numeric: tabular-nums; }
+.terrain-analysis__stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.35rem; margin: 0.65rem 0 0; }
+.terrain-analysis__stats div { padding: 0.42rem; border-radius: 7px; background: white; text-align: center; }
+.terrain-analysis__stats dt { color: var(--text-soft); font-size: 0.62rem; }
+.terrain-analysis__stats dd { margin: 0.12rem 0 0; font-size: 0.73rem; font-weight: 800; font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.terrain-analysis__details { margin-top: 0.65rem; font-size: 0.7rem; }
+.terrain-analysis__details summary { cursor: pointer; color: var(--text-soft); font-weight: 750; }
+.terrain-analysis__details dl { margin: 0.45rem 0 0; }
+.terrain-analysis__details dl div { align-items: start; padding: 0.22rem 0; }
+.terrain-analysis__details dt { color: var(--text-soft); }
+.terrain-analysis__details dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.terrain-analysis__model { margin-top: 0.75rem; }
+.terrain-analysis__model .btn { width: 100%; justify-content: center; }
+.terrain-analysis__model p { margin: 0.35rem 0 0; color: var(--text-soft); font-size: 0.7rem; }
+
+@keyframes terrain-spin { to { transform: rotate(360deg); } }
+
+.mapa__car-detail {
+  margin-top: 0.8rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.mapa__car-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.55rem;
+}
+
+.mapa__car-detail-head strong {
+  color: var(--text);
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+.mapa__car-detail-retry {
+  border: none;
+  background: none;
+  color: var(--primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.mapa__car-detail-retry:hover {
+  text-decoration: underline;
+}
+
+.mapa__car-detail-status {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+.mapa__car-detail-status.is-error {
+  color: #b91c1c;
+}
+
+.mapa__car-detail-status a {
+  color: var(--primary);
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.mapa__car-detail-list {
+  display: grid;
+  gap: 0.36rem;
+  margin: 0;
+}
+
+.mapa__car-detail-row {
+  display: grid;
+  grid-template-columns: minmax(92px, 0.85fr) minmax(0, 1.15fr);
+  gap: 0.6rem;
+  align-items: baseline;
+  padding: 0.36rem 0;
+  border-bottom: 1px solid rgba(229, 231, 235, 0.75);
+}
+
+.mapa__car-detail-row:last-child {
+  border-bottom: none;
+}
+
+.mapa__car-detail-row dt,
+.mapa__car-detail-row dd {
+  margin: 0;
+  min-width: 0;
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+
+.mapa__car-detail-row dt {
+  color: var(--text-soft);
+}
+
+.mapa__car-detail-row dd {
+  color: var(--text);
+  font-weight: 650;
+  text-align: right;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* Mobile: painel vira bottom-sheet. */
+@media (max-width: 720px) {
+  .mapa__panel {
+    position: fixed;
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: max(0.5rem, env(safe-area-inset-bottom));
+    width: auto;
+    max-width: none;
+    height: fit-content;
+    max-height: min(42vh, 260px);
+    border-radius: 12px;
+    margin: 0;
+    padding: 0.75rem 0.75rem 0.7rem;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(17, 24, 39, 0.22);
+    border: 1px solid rgba(229, 231, 235, 0.9);
+  }
+
+  .mapa__panel--details {
+    max-height: min(72vh, 520px);
+  }
+
+  .mapa__panel--analysis {
+    max-height: min(76vh, 600px);
+  }
+
+  .mapa__panel::before {
+    content: '';
+    position: absolute;
+    top: 0.32rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 3px;
+    background: var(--text-soft);
+    border-radius: 2px;
+    opacity: 0.28;
+  }
+
+  .mapa__legend-close {
+    top: 0.42rem;
+    right: 0.48rem;
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    background: rgba(243, 244, 246, 0.9);
+    border-radius: 50%;
+    font-size: 1rem;
+  }
+
+  .mapa__panel h3 {
+    margin: 0 2.1rem 0.12rem 0;
+    font-size: 0.88rem;
+    line-height: 1.1;
+  }
+
+  .code {
+    margin: 0 2.1rem 0.48rem 0;
+    font-size: 0.68rem;
+    line-height: 1.25;
+    word-break: normal;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .kv {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.38rem;
+  }
+
+  .kv__row {
+    display: block;
+    min-width: 0;
+    padding: 0.42rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(248, 250, 252, 0.92);
+    font-size: 0.76rem;
+    line-height: 1.2;
+  }
+
+  .kv__label {
+    display: block;
+    margin-bottom: 0.12rem;
+    font-size: 0.62rem;
+    line-height: 1.1;
+  }
+
+  .kv__value {
+    display: block;
+    text-align: left;
+    font-size: 0.78rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .hint {
+    margin-top: 0.35rem;
+    font-size: 0.68rem;
+    line-height: 1.25;
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: 1.18fr 0.78fr 0.76fr 0.5fr;
+    gap: 0.38rem;
+    margin-top: 0.55rem;
+  }
+
+  .actions .btn,
+  .actions .mapa__primary-action {
+    min-width: 0;
+    min-height: 36px;
+    flex: initial;
+    flex-basis: auto;
+    padding: 0.48rem 0.42rem;
+    border-radius: var(--r-full);
+    font-size: 0.74rem;
+    line-height: 1;
+  }
+
+  .mapa__label-full {
+    display: none;
+  }
+
+  .mapa__label-short {
+    display: inline;
+  }
+
+  .mapa__car-detail {
+    margin-top: 0.58rem;
+    padding-top: 0.55rem;
+  }
+
+  .mapa__car-detail-head {
+    margin-bottom: 0.42rem;
+  }
+
+  .mapa__car-detail-head strong {
+    font-size: 0.76rem;
+  }
+
+  .mapa__car-detail-list {
+    gap: 0.16rem;
+  }
+
+  .mapa__car-detail-row {
+    grid-template-columns: minmax(84px, 0.82fr) minmax(0, 1.18fr);
+    gap: 0.45rem;
+    padding: 0.28rem 0;
+  }
+
+  .mapa__car-detail-row dt,
+  .mapa__car-detail-row dd,
+  .mapa__car-detail-status {
+    font-size: 0.68rem;
+  }
+}
