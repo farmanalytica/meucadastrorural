@@ -3,9 +3,11 @@
 // dark primary background, white FARM Analytica logo, open-source note.
 import { ref } from 'vue'
 import LegalDisclaimerModal from './LegalDisclaimerModal.vue'
+import HelpGuideModal from './HelpGuideModal.vue'
 
 const base = import.meta.env.BASE_URL
 const showDisclaimer = ref(false)
+const showHelpGuide = ref(false)
 </script>
 
 <template>
@@ -29,6 +31,10 @@ const showDisclaimer = ref(false)
         rel="noopener noreferrer"
         >FARM Analytica</a
       >.
+      <button type="button" class="footer__link footer__link--btn" @click="showHelpGuide = true">
+        Como usar
+      </button>
+      ·
       <button type="button" class="footer__link footer__link--btn" @click="showDisclaimer = true">
         Disclaimer legal
       </button>
@@ -40,6 +46,7 @@ const showDisclaimer = ref(false)
       <a class="footer__link" href="https://www.ibge.gov.br/" target="_blank" rel="noopener noreferrer">IBGE</a>
     </span>
 
+    <HelpGuideModal v-if="showHelpGuide" @close="showHelpGuide = false" />
     <LegalDisclaimerModal v-if="showDisclaimer" @close="showDisclaimer = false" />
   </footer>
 </template>

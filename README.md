@@ -1,18 +1,21 @@
 # Meu Cadastro Rural
 
-Consulta pública do CAR (Cadastro Ambiental Rural), 100% estática — publicada no
+Consulta pública do CAR (Cadastro Ambiental Rural), 100% estática, publicada no
 GitHub Pages, sem backend.
 
 **Site:** https://meucadastrorural.com.br
 
 ## Funcionalidades
 
-- Visualização dos limites dos imóveis CAR (SICAR) sobre imagem de satélite
+- Visualização dos limites dos imóveis CAR (SICAR) sobre imagem de satélite, com opacidade ajustável
+- Camada opcional da Área de Preservação Permanente (APP) do imóvel selecionado
 - Limites de estados e municípios (IBGE), com liga/desliga por camada
 - Busca por código do CAR (ex.: `GO-5213103-…`), por endereço ou por coordenadas
 - Download do contorno do imóvel em KML
+- Download da APP do imóvel em GeoJSON
 - Dados oficiais do SICAR (status, área, módulos fiscais etc.) via WFS público
 - Link direto para um imóvel: `/?car=<código do CAR>`
+- Disclaimer legal no rodapé, com fluxograma explicando de onde vêm os dados
 
 ## Fontes de dados (consumidas pelo navegador)
 

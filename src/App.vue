@@ -21,6 +21,8 @@ import SiteFooter from './components/SiteFooter.vue'
 // the controller is created.
 ;(globalThis as any).L = L
 
+const base = import.meta.env.BASE_URL
+
 const mapEl = ref<HTMLElement | null>(null)
 let map: L.Map | null = null
 let gotoMarker: L.CircleMarker | null = null
@@ -169,8 +171,11 @@ onBeforeUnmount(() => {
     <div ref="mapEl" class="app__map"></div>
 
     <header class="app__brand">
-      <h1>Meu Cadastro Rural</h1>
-      <p>Consulta pública do CAR — limites, KML e dados oficiais</p>
+      <div class="app__brand-title">
+        <img class="app__brand-logo" :src="`${base}logo-icon.png`" alt="" width="128" height="94" />
+        <h1>Meu Cadastro Rural</h1>
+      </div>
+      <p>Consulta pública do CAR: limites, KML e dados oficiais</p>
       <MapSearch
         :car-searching="carSearching"
         :car-search-error="carSearchError"
@@ -259,6 +264,18 @@ onBeforeUnmount(() => {
   border: 1px solid var(--border);
   border-radius: var(--r);
   box-shadow: var(--sh-md);
+}
+
+.app__brand-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.app__brand-logo {
+  height: 26px;
+  width: auto;
+  flex: none;
 }
 
 .app__brand h1 {
