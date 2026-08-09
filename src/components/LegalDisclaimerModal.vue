@@ -76,6 +76,31 @@ defineEmits<{ close: [] }>()
       IBGE).
     </p>
 
+    <h3>Sobre os dados exibidos</h3>
+    <p>
+      A <strong>FARM Analytica não é produtora, provedora, curadora nem garantidora dos dados</strong>
+      exibidos neste site. Todo o conteúdo (limites de imóveis rurais, municípios, estados,
+      APPs e demais camadas) é obtido diretamente das fontes oficiais (SICAR, IBGE) e apenas
+      repassado ao navegador do usuário, sem qualquer tratamento, validação, correção ou
+      curadoria de mérito por parte da FARM Analytica.
+    </p>
+    <p>
+      Os dados são disponibilizados <strong>"no estado em que se encontram" ("as is")</strong>,
+      sem garantia de exatidão, integridade, atualização, disponibilidade ou adequação a
+      qualquer finalidade. Erros, omissões, desatualizações ou inconsistências podem ter origem
+      nas próprias fontes oficiais ou na indisponibilidade delas, e estão fora do controle da
+      FARM Analytica.
+    </p>
+    <p>
+      A FARM Analytica não se responsabiliza, sob nenhum aspecto — técnico, jurídico, financeiro
+      ou de qualquer outra natureza —, por decisões, atos, contratos, disputas judiciais ou
+      administrativas, prejuízos diretos ou indiretos, lucros cessantes ou danos de qualquer
+      espécie decorrentes do uso, da interpretação ou da confiança depositada nos dados aqui
+      exibidos. O uso das informações é de <strong>exclusiva responsabilidade do usuário</strong>,
+      cabendo a ele conferir e validar qualquer dado junto às fontes oficiais antes de qualquer
+      uso formal, jurídico ou decisório.
+    </p>
+
     <h3>Recomendação para uso institucional</h3>
     <p>
       Como este é um projeto <strong>open source</strong>, todo o pipeline é reprodutível a partir

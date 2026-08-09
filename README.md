@@ -27,6 +27,10 @@ GitHub Pages, sem backend.
 | Endereços | Photon (autocomplete) e Nominatim (geocodificação) |
 | Imagem de satélite | Esri World Imagery |
 
+O download e a preparação mensal dos dados do SICAR (zips por estado, reorganizados
+em chunks por região e publicados no bucket S3) são documentados em outro repositório:
+[automacao_download_car_sicar](https://github.com/farmanalytica/automacao_download_car_sicar).
+
 ## Desenvolvimento
 
 ```bash
