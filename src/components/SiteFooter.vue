@@ -1,7 +1,11 @@
 <script setup lang="ts">
 // Fixed bottom bar over the map, modeled on the farm_tools website footer:
 // dark primary background, white FARM Analytica logo, open-source note.
+import { ref } from 'vue'
+import LegalDisclaimerModal from './LegalDisclaimerModal.vue'
+
 const base = import.meta.env.BASE_URL
+const showDisclaimer = ref(false)
 </script>
 
 <template>
@@ -25,6 +29,9 @@ const base = import.meta.env.BASE_URL
         rel="noopener noreferrer"
         >FARM Analytica</a
       >.
+      <button type="button" class="footer__link footer__link--btn" @click="showDisclaimer = true">
+        Disclaimer legal
+      </button>
     </span>
     <span class="footer__credits">
       Dados:
@@ -32,6 +39,8 @@ const base = import.meta.env.BASE_URL
       ·
       <a class="footer__link" href="https://www.ibge.gov.br/" target="_blank" rel="noopener noreferrer">IBGE</a>
     </span>
+
+    <LegalDisclaimerModal v-if="showDisclaimer" @close="showDisclaimer = false" />
   </footer>
 </template>
 
@@ -75,6 +84,14 @@ const base = import.meta.env.BASE_URL
 
 .footer__link:hover {
   color: #fff;
+}
+
+.footer__link--btn {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
 }
 
 .footer__credits {
