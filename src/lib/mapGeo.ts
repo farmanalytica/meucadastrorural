@@ -6,7 +6,7 @@ type Geometry = {
 }
 
 // Approximate area (ha) of a Polygon/MultiPolygon geometry,
-// equirectangular projection at the centroid. Ported from conformidaderural/src/lib/geo.js.
+// equirectangular projection at the centroid.
 function ringAreaHa(ring: number[][]): number {
   if (!ring || ring.length < 4) return 0
   const R = 6378137

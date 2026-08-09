@@ -1,5 +1,4 @@
 // @ts-nocheck
-// Ported from conformidaderural/src/lib/areaOverlayLayer.js — no logic changes.
 // Manages the chunked overlay of CAR (SICAR) outlines on Leaflet in map mode.
 //
 // Usage: call createUnavailableLayerController({ onSelectUnavailable }) once,
@@ -578,8 +577,9 @@ export function createUnavailableLayerController({ onSelectUnavailable } = {}) {
             chunkLoadScheduler.cancel();
             removeSectionLayer();
             for (const id of [...activeLayers.keys()]) removeChunkLayer(id);
-            removeSelectionHighlight();
             removeFeaturedHighlight();
+            // Selection highlight (orange) deliberately survives hiding the
+            // CAR layer — the selected parcel should stay visible on its own.
         } else {
             refresh();
             if (selectedUnavailableId) updateSelectionHighlight(selectedUnavailableId);

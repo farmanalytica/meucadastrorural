@@ -35,6 +35,3 @@ npm run typecheck
 
 O deploy é automático: push na branch `main` dispara o workflow
 `.github/workflows/deploy.yml`, que faz o build e publica no GitHub Pages.
-
-Código do mapa portado de [monitoramentofarm](https://github.com/farmanalytica/monitoramentofarm)
-(subconjunto somente-leitura, sem autenticação).

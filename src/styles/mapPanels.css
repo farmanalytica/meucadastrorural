@@ -56,6 +56,10 @@
   margin-top: 0.4rem;
 }
 
+.hint.is-error {
+  color: #b91c1c;
+}
+
 .mapa__panel h3 {
   margin: 0 0 0.3rem;
   padding-right: 1.5rem;
@@ -426,7 +430,7 @@
 
   .actions {
     display: grid;
-    grid-template-columns: 1.18fr 0.78fr 0.76fr 0.5fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.38rem;
     margin-top: 0.55rem;
   }

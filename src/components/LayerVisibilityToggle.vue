@@ -8,6 +8,7 @@
 defineProps<{
   modelValue: boolean
   label: string
+  disabled?: boolean
 }>()
 
 defineEmits<{
@@ -21,6 +22,7 @@ defineEmits<{
     class="layer-toggle"
     role="switch"
     :aria-checked="modelValue"
+    :disabled="disabled"
     @click="$emit('update:modelValue', !modelValue)"
   >
     <svg
@@ -82,6 +84,11 @@ defineEmits<{
 
 .layer-toggle[aria-checked='true'] .layer-toggle__icon {
   color: var(--accent);
+}
+
+.layer-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .layer-toggle__label {

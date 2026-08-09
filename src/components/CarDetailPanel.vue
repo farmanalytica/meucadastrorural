@@ -14,11 +14,14 @@ defineProps<{
   detailLoading: boolean
   detailError: string
   detailRows: Array<{ label: string; value: string }>
+  appOverlayError: string
+  hasAppFeatures: boolean
 }>()
 defineEmits<{
   close: []
   'toggle-detail': []
   'export-kml': []
+  'export-app': []
   retry: []
 }>()
 </script>
@@ -46,7 +49,12 @@ defineEmits<{
         <span class="mapa__label-full">Baixar KML</span>
         <span class="mapa__label-short">KML</span>
       </button>
+      <button class="btn btn-ghost-dark" :disabled="!hasAppFeatures" @click="$emit('export-app')">
+        <span class="mapa__label-full">Baixar Área de Preservação Permanente (APP)</span>
+        <span class="mapa__label-short">APP</span>
+      </button>
     </div>
+    <p v-if="appOverlayError" class="hint is-error">{{ appOverlayError }}</p>
     <section v-if="detailOpen" class="mapa__car-detail" aria-live="polite">
       <div class="mapa__car-detail-head">
         <strong>Dados oficiais SICAR</strong>

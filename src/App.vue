@@ -8,8 +8,9 @@ import L from 'leaflet'
 import { createUnavailableLayerController } from './lib/areaOverlayLayer'
 import { SECTION_ZOOM_THRESHOLD } from './lib/areaOverlayLayer.styles'
 import { createAdminBoundariesController } from './lib/adminBoundariesLayer'
-import { downloadKml } from './lib/kmlExporter'
+import { downloadKml, downloadGeoJson } from './lib/kmlExporter'
 import { useCarDetailPanel } from './composables/useCarDetailPanel'
+import { useAppOverlay } from './composables/useAppOverlay'
 import { useMapLayers } from './composables/useMapLayers'
 import MapSearch from './components/MapSearch.vue'
 import CarDetailPanel from './components/CarDetailPanel.vue'
@@ -35,6 +36,7 @@ const currentZoom = ref(4)
 const { showCar, carOpacity, showStates, showMunicipios } = useMapLayers()
 
 const detailPanel = useCarDetailPanel({ selectedId, selectedFeature })
+const appOverlay = useAppOverlay({ selectedId })
 
 const carController = createUnavailableLayerController({
   onSelectUnavailable: (id: string) => void selectCar(id),
@@ -103,6 +105,13 @@ function exportKml() {
   )
 }
 
+function exportApp() {
+  const features = appOverlay.appOverlayFeatures.value
+  const id = selectedId.value
+  if (!features || !id) return
+  downloadGeoJson({ type: 'FeatureCollection', features }, `${id}_APP`)
+}
+
 watch(showCar, (visible) => carController.setVisible(visible))
 watch(carOpacity, (value) => carController.setOpacity(value))
 watch(showStates, (visible) => adminBoundaries.setStatesVisible(visible))
@@ -139,6 +148,7 @@ onMounted(() => {
   carController.setVisible(showCar.value)
   carController.setOpacity(carOpacity.value)
   carController.init(map)
+  appOverlay.initAppOverlayLayer(map)
 
   // Deep link: /?car=<codImovel> opens straight on a property.
   const carParam = new URLSearchParams(window.location.search).get('car')
@@ -147,6 +157,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   carController.destroy()
+  appOverlay.destroyAppOverlayLayer()
   adminBoundaries.destroy()
   map?.remove()
   map = null
@@ -183,6 +194,13 @@ onBeforeUnmount(() => {
           @input="carOpacity = Number(($event.target as HTMLInputElement).value)"
         />
       </label>
+      <LayerVisibilityToggle
+        v-if="selectedId"
+        :model-value="appOverlay.appOverlayVisible.value"
+        :disabled="appOverlay.appOverlayLoading.value"
+        :label="appOverlay.appOverlayLoading.value ? 'Carregando Área de Preservação Permanente (APP)…' : 'Área de Preservação Permanente (APP)'"
+        @update:model-value="appOverlay.toggleAppOverlay"
+      />
       <LayerVisibilityToggle v-model="showStates" label="Estados" />
       <LayerVisibilityToggle v-model="showMunicipios" label="Municípios" />
       <p v-if="showCar && currentZoom < SECTION_ZOOM_THRESHOLD" class="app__zoom-hint">
@@ -201,9 +219,12 @@ onBeforeUnmount(() => {
       :detail-loading="detailPanel.carDetailLoading.value"
       :detail-error="detailPanel.carDetailError.value"
       :detail-rows="detailPanel.carDetailRows.value"
+      :app-overlay-error="appOverlay.appOverlayError.value"
+      :has-app-features="Boolean(appOverlay.appOverlayFeatures.value)"
       @close="closePanel"
       @toggle-detail="detailPanel.toggleCarDetailPanel"
       @export-kml="exportKml"
+      @export-app="exportApp"
       @retry="detailPanel.retryCarDetails"
     />
 

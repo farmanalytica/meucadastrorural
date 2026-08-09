@@ -48,6 +48,27 @@ export async function requestStaticAreaJson(overlayPath, { allowNotFound = false
     return null;
 }
 
+// ─── APP overlay (per-parcel, on-demand) ──────────────────────────────────────
+// Same bucket as area_overlay, separate prefix. Unlike area_overlay this is
+// never fetched map-wide — only for a single selected cod_imovel at a time,
+// so there's no chunk manifest/scheduler here, just a direct static fetch.
+export const S3_URL = 'https://dados-car-963200076509-us-east-2-an.s3.us-east-2.amazonaws.com';
+export const APPS_OVERLAY_PREFIX = `${S3_URL}/local_chunks/apps_overlay`;
+
+// Generic static-file JSON fetch (used by the APP overlay's index/bucket
+// lookups, which — unlike area_overlay — address files by a fully-formed
+// relative path rather than a logical overlayPath needing resolution).
+export async function fetchStaticJson(url, { allowNotFound = false } = {}) {
+    try {
+        const response = await fetch(url);
+        if (allowNotFound && response.status === 404) return null;
+        if (response.ok) return await response.json();
+    } catch (_err) {
+        // caller treats a failed fetch the same as "no data"
+    }
+    return null;
+}
+
 // ─── Section helpers ──────────────────────────────────────────────────────────
 export async function buildSectionsAsync(mf) {
     const sectionMap = new Map();

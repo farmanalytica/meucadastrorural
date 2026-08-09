@@ -1,5 +1,4 @@
 // @ts-nocheck
-// Ported from conformidaderural/src/lib/kmlExporter.js — no logic changes.
 
 export function sanitizeDownloadStem(stem) {
   return String(stem || 'contorno')
