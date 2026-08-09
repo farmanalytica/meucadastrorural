@@ -1,0 +1,13 @@
+{
+  "name": "Meu Cadastro Rural — Consulta CAR",
+  "short_name": "Meu Cadastro Rural",
+  "description": "Consulta pública do CAR: limites, KML e dados oficiais.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#183f3a",
+  "theme_color": "#183f3a",
+  "icons": [
+    { "src": "/logo-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/logo-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

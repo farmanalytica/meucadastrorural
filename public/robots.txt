@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://meucadastrorural.com.br/sitemap.xml
