@@ -45,8 +45,16 @@ export interface CarDetailRow {
   value: string
 }
 
+// Tolerate common paste/typing mistakes: dots, spaces or underscores used
+// instead of dashes, stray punctuation, duplicated dashes, lowercase input.
 export function normalizeCarCode(codImovel: string): string {
-  return String(codImovel || '').trim().toUpperCase()
+  return String(codImovel || '')
+    .trim()
+    .toUpperCase()
+    .replace(/[.\s_]+/g, '-')
+    .replace(/[^A-Z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
 }
 
 export function ufFromCodImovel(codImovel: string): string | null {

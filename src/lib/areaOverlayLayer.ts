@@ -221,8 +221,16 @@ export function createUnavailableLayerController({ onSelectUnavailable } = {}) {
         return L.geoJSON(feature).getBounds();
     }
 
+    // Tolerate common paste/typing mistakes: dots, spaces or underscores used
+    // instead of dashes, stray punctuation, duplicated dashes, lowercase input.
     function normalizeAreaOverlaySearchQuery(query) {
-        return String(query || '').trim().toUpperCase();
+        return String(query || '')
+            .trim()
+            .toUpperCase()
+            .replace(/[.\s_]+/g, '-')
+            .replace(/[^A-Z0-9-]/g, '')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '');
     }
 
     async function findInCachedChunks(normalizedStem) {
