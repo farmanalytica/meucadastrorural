@@ -1,17 +1,38 @@
 <script setup lang="ts">
 // Fixed bottom bar over the map, modeled on the farm_tools website footer:
 // dark primary background, white FARM Analytica logo, open-source note.
-import { ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import LegalDisclaimerModal from './LegalDisclaimerModal.vue'
 import HelpGuideModal from './HelpGuideModal.vue'
 
 const base = import.meta.env.BASE_URL
 const showDisclaimer = ref(false)
 const showHelpGuide = ref(false)
+
+// The footer wraps to 2+ lines on narrow phones, so its height isn't the
+// single-line height other absolutely-positioned overlays (Leaflet controls,
+// the CAR detail bottom-sheet) were built assuming. Publish the real height
+// as a CSS var so those offsets stay correct instead of drifting out of sync
+// and getting covered by the footer.
+const footerEl = ref<HTMLElement | null>(null)
+let observer: ResizeObserver | null = null
+
+onMounted(() => {
+  if (!footerEl.value) return
+  observer = new ResizeObserver(() => {
+    // ResizeObserver's contentRect excludes padding; read offsetHeight
+    // instead so the published height matches the box the footer actually
+    // occupies (it's positioned via bottom: 0, padding and all).
+    document.documentElement.style.setProperty('--footer-h', `${footerEl.value?.offsetHeight ?? 0}px`)
+  })
+  observer.observe(footerEl.value)
+})
+
+onBeforeUnmount(() => observer?.disconnect())
 </script>
 
 <template>
-  <footer class="footer">
+  <footer ref="footerEl" class="footer">
     <a href="https://farmanalytica.com.br" target="_blank" rel="noopener noreferrer">
       <img class="footer__logo" :src="`${base}farm_analytica_horizontal_white.svg`" alt="FARM Analytica" />
     </a>
@@ -63,7 +84,7 @@ const showHelpGuide = ref(false)
   justify-content: center;
   gap: 0.8rem;
   flex-wrap: wrap;
-  padding: 0.45rem 1rem;
+  padding: 0.45rem 1rem calc(0.45rem + env(safe-area-inset-bottom));
   background: rgba(24, 63, 58, 0.92);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);

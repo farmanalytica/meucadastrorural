@@ -341,19 +341,24 @@ onBeforeUnmount(() => {
 
   .app__layers {
     top: auto;
-    bottom: 5.5rem;
+    /* Clear both the footer and the Leaflet zoom control stacked above it
+       (bottom-left, ~64px tall) — the panel is right-aligned but on narrow
+       phones the wide Esri attribution text spans under it too. */
+    bottom: calc(var(--footer-h, 38px) + 88px);
   }
 }
 </style>
 
 <style>
-/* Unscoped: keep Leaflet controls and the CAR panel clear of the footer bar. */
+/* Unscoped: keep Leaflet controls and the CAR panel clear of the footer bar.
+   --footer-h is published by SiteFooter (ResizeObserver) since the footer
+   wraps to a taller, variable height on narrow phones. */
 .app .leaflet-bottom {
-  bottom: 38px;
+  bottom: calc(var(--footer-h, 38px) + 6px);
 }
 
 .app .mapa__panel {
-  bottom: calc(1rem + 38px);
-  max-height: calc(100% - 2rem - 38px);
+  bottom: calc(1rem + var(--footer-h, 38px));
+  max-height: calc(100% - 2rem - var(--footer-h, 38px));
 }
 </style>

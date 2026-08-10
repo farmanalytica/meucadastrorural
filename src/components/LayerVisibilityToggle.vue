@@ -94,4 +94,18 @@ defineEmits<{
 .layer-toggle__label {
   min-width: 0;
 }
+
+@media (max-width: 640px) {
+  /* Icon + label alone are well under the ~44px touch target guideline;
+     widen the tappable row without changing the compact desktop look. */
+  .layer-toggle {
+    padding: 0.5rem 0;
+    gap: 0.5rem;
+  }
+
+  .layer-toggle__icon {
+    width: 19px;
+    height: 19px;
+  }
+}
 </style>

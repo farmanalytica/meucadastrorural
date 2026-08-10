@@ -173,4 +173,12 @@ onBeforeUnmount(() => {
 .mapsearch__label { overflow: hidden; text-overflow: ellipsis; }
 .mapsearch__hint { padding: 0.4rem 0.6rem; font-size: 0.75rem; color: var(--text-muted); }
 .mapsearch__error { color: #c0392b; font-size: 0.78rem; margin: 0.4rem 0 0; }
+
+@media (max-width: 640px) {
+  /* iOS Safari auto-zooms the page on focus of any input with font-size
+     below 16px — keep this at 16px so tapping the search box doesn't zoom. */
+  .mapsearch__input {
+    font-size: 16px;
+  }
+}
 </style>
