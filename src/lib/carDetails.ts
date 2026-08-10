@@ -45,16 +45,17 @@ export interface CarDetailRow {
   value: string
 }
 
-// Tolerate common paste/typing mistakes: dots, spaces or underscores used
-// instead of dashes, stray punctuation, duplicated dashes, lowercase input.
+// Tolerate common paste/typing mistakes: dots, spaces, underscores or stray
+// punctuation anywhere in the code (including inside the hash segment),
+// lowercase input. Strips everything but letters/digits, then reinserts
+// dashes at the fixed structural positions (UF, IBGE code, hash) rather than
+// mapping stray separators 1:1 to dashes — a mid-hash "." would otherwise
+// turn into a bogus extra dash instead of just vanishing.
 export function normalizeCarCode(codImovel: string): string {
-  return String(codImovel || '')
-    .trim()
-    .toUpperCase()
-    .replace(/[.\s_]+/g, '-')
-    .replace(/[^A-Z0-9-]/g, '')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
+  const raw = String(codImovel || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+  if (raw.length <= 2) return raw
+  if (raw.length <= 9) return `${raw.slice(0, 2)}-${raw.slice(2)}`
+  return `${raw.slice(0, 2)}-${raw.slice(2, 9)}-${raw.slice(9)}`
 }
 
 export function ufFromCodImovel(codImovel: string): string | null {

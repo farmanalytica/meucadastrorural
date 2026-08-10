@@ -205,12 +205,18 @@ onBeforeUnmount(() => {
         :disabled="appOverlay.appOverlayLoading.value"
         :label="appOverlay.appOverlayLoading.value ? 'Carregando Área de Preservação Permanente (APP)…' : 'Área de Preservação Permanente (APP)'"
         @update:model-value="appOverlay.toggleAppOverlay"
-      />
-      <LayerVisibilityToggle v-model="showStates" label="Estados" />
-      <LayerVisibilityToggle v-model="showMunicipios" label="Municípios" />
+      >
+        <span class="app__legend-swatch app__legend-swatch--app"></span>
+        {{ appOverlay.appOverlayLoading.value ? 'Carregando Área de Preservação Permanente (APP)…' : 'Área de Preservação Permanente (APP)' }}
+      </LayerVisibilityToggle>
       <p v-if="showCar && currentZoom < SECTION_ZOOM_THRESHOLD" class="app__zoom-hint">
         Aproxime o mapa para ver os limites dos imóveis
       </p>
+      <ul class="app__legend">
+        <li><span class="app__legend-swatch app__legend-swatch--states"></span>Estados</li>
+        <li><span class="app__legend-swatch app__legend-swatch--municipios"></span>Municípios</li>
+        <li v-if="selectedId"><span class="app__legend-swatch app__legend-swatch--selected"></span>Imóvel selecionado</li>
+      </ul>
     </section>
 
     <CarDetailPanel
@@ -332,6 +338,55 @@ onBeforeUnmount(() => {
   margin: 0.25rem 0 0;
   font-size: 0.68rem;
   color: var(--text-muted);
+}
+
+.app__legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.72rem;
+  color: var(--text-soft);
+}
+
+.app__legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.app__legend-swatch {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 16px;
+  height: 0;
+  border-top-style: solid;
+}
+
+.app__legend-swatch--states {
+  border-top-width: 2px;
+  border-top-color: #ffffff;
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.6));
+}
+
+.app__legend-swatch--municipios {
+  border-top-width: 1px;
+  border-top-color: #facc15;
+}
+
+.app__legend-swatch--selected {
+  border-top-width: 3px;
+  border-top-color: #f97316;
+}
+
+.app__legend-swatch--app {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid #15803d;
+  border-radius: 3px;
+  background: rgba(22, 163, 74, 0.28);
 }
 
 @media (max-width: 640px) {
