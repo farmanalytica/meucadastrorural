@@ -8,6 +8,17 @@ import {
     SECTION_ZOOM_THRESHOLD,
     BUILD_SECTIONS_YIELD_EVERY,
     DETAIL_CHUNK_BUDGETS,
+    VIEWPORT_REFERENCE_AREA,
+    VIEWPORT_BUDGET_SCALE_MIN,
+    VIEWPORT_BUDGET_SCALE_MAX,
+    MOBILE_BUDGET_FACTOR,
+    SAVE_DATA_BUDGET_FACTOR,
+    SLOW_2G_BUDGET_FACTOR,
+    EFFECTIVE_3G_BUDGET_FACTOR,
+    MOBILE_MAX_CONCURRENT_CHUNK_FETCHES,
+    CHUNK_RENDERER_TARGET_BUFFER_PX,
+    CHUNK_RENDERER_MIN_PADDING,
+    CHUNK_RENDERER_MAX_PADDING,
 } from './areaOverlayLayer.styles';
 
 // Resolves the layer's logical overlay path to a static file path under a given prefix.
@@ -132,8 +143,70 @@ export function bboxIntersects(bbox, bounds) {
     );
 }
 
-export function getDetailChunkBudget(zoom) {
-    return DETAIL_CHUNK_BUDGETS.find((budget) => zoom >= budget.minZoom) || null;
+// True on phones/tablets — devices whose primary input is a coarse (touch)
+// pointer, regardless of viewport size (a touch laptop docked to a big
+// monitor stays "fine").
+export function isCoarsePointerDevice() {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+    return window.matchMedia('(pointer: coarse)').matches;
+}
+
+function getNetworkInfo() {
+    if (typeof navigator === 'undefined') return null;
+    return navigator.connection || navigator.mozConnection || navigator.webkitConnection || null;
+}
+
+// Multiplier for slow/metered connections (data-saver, 2G/3G) — independent
+// of device type, since a desktop tethered to a phone hotspot pays the same
+// per-byte cost as the phone itself.
+export function getConnectionBudgetFactor() {
+    const conn = getNetworkInfo();
+    if (!conn) return 1;
+    if (conn.saveData) return SAVE_DATA_BUDGET_FACTOR;
+    if (conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g') return SLOW_2G_BUDGET_FACTOR;
+    if (conn.effectiveType === '3g') return EFFECTIVE_3G_BUDGET_FACTOR;
+    return 1;
+}
+
+// Combines viewport-area scale (bigger screen → smaller budget, since
+// canvas rasterization cost scales with CSS-pixel area) with device/network
+// cuts (touch-primary hardware, slow/metered connections).
+export function getBudgetScale(viewportArea) {
+    const areaScale = viewportArea
+        ? Math.min(VIEWPORT_BUDGET_SCALE_MAX, Math.max(VIEWPORT_BUDGET_SCALE_MIN, VIEWPORT_REFERENCE_AREA / viewportArea))
+        : 1;
+    const mobileFactor = isCoarsePointerDevice() ? MOBILE_BUDGET_FACTOR : 1;
+    const connectionFactor = getConnectionBudgetFactor();
+    return areaScale * mobileFactor * connectionFactor;
+}
+
+// Converts a fixed pixel-margin target into the ratio Leaflet's canvas
+// `padding` option expects, so the actual backing-buffer margin stays
+// roughly constant across viewport sizes instead of compounding with them.
+export function getAdaptiveCanvasPadding(viewportSize) {
+    if (!viewportSize || !viewportSize.x || !viewportSize.y) return CHUNK_RENDERER_MAX_PADDING;
+    const smallestDimension = Math.min(viewportSize.x, viewportSize.y);
+    const raw = CHUNK_RENDERER_TARGET_BUFFER_PX / smallestDimension;
+    return Math.min(CHUNK_RENDERER_MAX_PADDING, Math.max(CHUNK_RENDERER_MIN_PADDING, raw));
+}
+
+export function getRecommendedConcurrency(baseConcurrency) {
+    if (isCoarsePointerDevice() || getConnectionBudgetFactor() < 1) {
+        return Math.min(baseConcurrency, MOBILE_MAX_CONCURRENT_CHUNK_FETCHES);
+    }
+    return baseConcurrency;
+}
+
+export function getDetailChunkBudget(zoom, viewportArea) {
+    const base = DETAIL_CHUNK_BUDGETS.find((budget) => zoom >= budget.minZoom) || null;
+    if (!base) return null;
+    const scale = getBudgetScale(viewportArea);
+    if (scale === 1) return base;
+    return {
+        minZoom: base.minZoom,
+        maxChunks: Math.max(2, Math.round(base.maxChunks * scale)),
+        maxFeatures: Math.max(300, Math.round(base.maxFeatures * scale)),
+    };
 }
 
 export function getChunkCenter(entry) {
@@ -151,8 +224,8 @@ export function getChunkDistanceScore(entry, center) {
     return (dx * dx) + (dy * dy);
 }
 
-export function computeDesiredChunkEntries(chunks, bounds, center, zoom) {
-    const budget = getDetailChunkBudget(zoom);
+export function computeDesiredChunkEntries(chunks, bounds, center, zoom, viewportArea) {
+    const budget = getDetailChunkBudget(zoom, viewportArea);
     if (!budget || !bounds || !center) return [];
 
     const visibleEntries = chunks
