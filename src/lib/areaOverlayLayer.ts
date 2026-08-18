@@ -36,6 +36,8 @@ import {
     getChunkIdsToUnload,
     shouldUseSectionLayer,
     shouldAddResolvedChunkLayer,
+    getRecommendedConcurrency,
+    getAdaptiveCanvasPadding,
 } from './areaOverlayLayer.helpers';
 import { createChunkLoadScheduler } from './chunkLoadScheduler';
 
@@ -93,7 +95,8 @@ export function createUnavailableLayerController({ onSelectUnavailable } = {}) {
         const L = globalThis.L;
         if (!L || !leafletMap) return null;
         if (!chunkRenderer) {
-            chunkRenderer = L.canvas({ padding: 0.5, tolerance: 4 });
+            const padding = getAdaptiveCanvasPadding(leafletMap.getSize());
+            chunkRenderer = L.canvas({ padding, tolerance: 4 });
         }
         return chunkRenderer;
     }
@@ -103,7 +106,7 @@ export function createUnavailableLayerController({ onSelectUnavailable } = {}) {
     let sectionLayer = null;
 
     const chunkLoadScheduler = createChunkLoadScheduler({
-        maxConcurrent: MAX_CONCURRENT_CHUNK_FETCHES,
+        maxConcurrent: getRecommendedConcurrency(MAX_CONCURRENT_CHUNK_FETCHES),
         load: (entry) => fetchChunk(entry),
         isLoaded: (chunkId) => activeLayers.has(chunkId),
         isEnabled: () => visible && Boolean(leafletMap),
@@ -493,7 +496,9 @@ export function createUnavailableLayerController({ onSelectUnavailable } = {}) {
         removeSectionLayer();
 
         const center = leafletMap.getCenter();
-        const desiredEntries = computeDesiredChunkEntries(mf.chunks, bounds, center, zoom);
+        const size = leafletMap.getSize();
+        const viewportArea = size.x * size.y;
+        const desiredEntries = computeDesiredChunkEntries(mf.chunks, bounds, center, zoom, viewportArea);
         chunkLoadScheduler.setDesiredEntries(desiredEntries, currentGeneration);
         const desiredChunkIds = chunkLoadScheduler.getDesiredChunkIds();
 
