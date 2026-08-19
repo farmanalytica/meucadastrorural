@@ -26,6 +26,8 @@ const base = import.meta.env.BASE_URL
 const mapEl = ref<HTMLElement | null>(null)
 let map: L.Map | null = null
 let gotoMarker: L.CircleMarker | null = null
+let userLocationMarker: L.CircleMarker | null = null
+let userAccuracyCircle: L.Circle | null = null
 
 const selectedId = ref<string | null>(null)
 const selectedFeature = shallowRef<any | null>(null)
@@ -34,6 +36,8 @@ const carSearching = ref(false)
 const carSearchError = ref('')
 const mapCenter = ref<{ lat: number; lng: number } | null>(null)
 const currentZoom = ref(4)
+const layersCardOpen = ref(true)
+const locateError = ref('')
 
 const { showCar, carOpacity, showStates, showMunicipios } = useMapLayers()
 
@@ -129,6 +133,57 @@ onMounted(() => {
   })
   // Top-left is taken by the brand/search card.
   L.control.zoom({ position: 'bottomleft' }).addTo(map)
+
+  // GPS locate — mobile only (touch-primary input). Desktop users have no
+  // GPS fix worth showing, so skip the permission prompt entirely there.
+  if (window.matchMedia('(pointer: coarse)').matches) {
+    const LocateControl = L.Control.extend({
+      options: { position: 'bottomleft' },
+      onAdd() {
+        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control')
+        const link = L.DomUtil.create('a', 'app__locate-control', container)
+        link.href = '#'
+        link.title = 'Minha localização'
+        link.setAttribute('role', 'button')
+        link.setAttribute('aria-label', 'Minha localização')
+        link.textContent = '📍'
+        L.DomEvent.disableClickPropagation(container)
+        L.DomEvent.on(link, 'click', (e: Event) => {
+          L.DomEvent.preventDefault(e)
+          locateError.value = ''
+          map?.locate({ setView: true, maxZoom: 16, enableHighAccuracy: true })
+        })
+        return container
+      },
+    })
+    new LocateControl().addTo(map)
+
+    map.on('locationfound', (e: L.LocationEvent) => {
+      userAccuracyCircle?.remove()
+      userLocationMarker?.remove()
+      userAccuracyCircle = L.circle(e.latlng, {
+        radius: e.accuracy,
+        color: '#2563eb',
+        weight: 1,
+        fillColor: '#3b82f6',
+        fillOpacity: 0.1,
+      }).addTo(map!)
+      userLocationMarker = L.circleMarker(e.latlng, {
+        radius: 7,
+        color: '#ffffff',
+        weight: 2,
+        fillColor: '#2563eb',
+        fillOpacity: 1,
+      }).addTo(map!)
+    })
+    map.on('locationerror', (e: L.ErrorEvent) => {
+      locateError.value = e.code === 1
+        ? 'Permissão de localização negada.'
+        : 'Não foi possível obter sua localização.'
+      setTimeout(() => { locateError.value = '' }, 4000)
+    })
+  }
+
   L.tileLayer(
     'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     { maxZoom: 19, attribution: '© Esri — Esri, Maxar, Earthstar Geographics' },
@@ -185,7 +240,17 @@ onBeforeUnmount(() => {
       />
     </header>
 
-    <section class="app__layers">
+    <button
+      v-if="!layersCardOpen"
+      class="app__layers-reopen"
+      title="Mostrar camadas"
+      @click="layersCardOpen = true"
+    >
+      Camadas
+    </button>
+
+    <section v-if="layersCardOpen" class="app__layers">
+      <button class="mapa__legend-close" title="Fechar" @click="layersCardOpen = false">×</button>
       <h2>Camadas</h2>
       <LayerVisibilityToggle v-model="showCar" label="Imóveis CAR" />
       <label class="app__opacity" v-if="showCar">
@@ -238,6 +303,8 @@ onBeforeUnmount(() => {
       @export-app="exportApp"
       @retry="detailPanel.retryCarDetails"
     />
+
+    <p v-if="locateError" class="app__locate-error">{{ locateError }}</p>
 
     <SiteFooter />
   </div>
@@ -314,11 +381,47 @@ onBeforeUnmount(() => {
 
 .app__layers h2 {
   margin: 0 0 0.2rem;
+  padding-right: 1.1rem;
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-soft);
+}
+
+.app__layers-reopen {
+  position: absolute;
+  z-index: 15;
+  top: 1rem;
+  right: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: rgba(251, 252, 251, 0.95);
+  box-shadow: var(--sh-sm);
+  padding: 0.4rem 0.7rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-soft);
+  cursor: pointer;
+}
+
+.app__layers-reopen:hover {
+  color: var(--text);
+}
+
+.app__locate-error {
+  position: absolute;
+  z-index: 20;
+  right: 1rem;
+  bottom: calc(var(--footer-h, 38px) + 70px);
+  max-width: calc(100vw - 2rem);
+  background: rgba(251, 252, 251, 0.97);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 0.4rem 0.6rem;
+  font-size: 0.72rem;
+  color: #b91c1c;
+  box-shadow: var(--sh-sm);
 }
 
 .app__opacity {
@@ -415,5 +518,17 @@ onBeforeUnmount(() => {
 .app .mapa__panel {
   bottom: calc(1rem + var(--footer-h, 38px));
   max-height: calc(100% - 2rem - var(--footer-h, 38px));
+}
+
+/* GPS locate control — built as a plain Leaflet control (not a Vue
+   template), so its markup falls outside scoped styles. */
+.app__locate-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  font-size: 16px;
+  text-decoration: none;
 }
 </style>
